@@ -27,7 +27,7 @@ __global__ void dot_product(const int *A, const int *B, int *C, int N)
 {
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	// Use atomicAdd
-	int sum = A[idx] + B[idx];
+	int sum = A[idx] * B[idx];
  	atomicAdd(C, sum);
 
 }
@@ -62,6 +62,7 @@ int main()
 	// Copy the matrices on GPU
 	cudaMemcpy(d_A, h_A, DSIZE * sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_B, h_B, DSIZE * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_C, h_C, sizeof(int), cudaMemcpyHostToDevice);
 	
 	// Check memory copy for errors
 	cudaCheckErrors();
