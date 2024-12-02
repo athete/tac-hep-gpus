@@ -29,7 +29,7 @@ To run the Alpaka application, one must first setup the working environment by r
 ```bash
 source scl_source enable devtoolset-11
 export BOOST_BASE=~abocci/public/boost
-export ALPAKA_BASE=$(pwd)
+export ALPAKA_BASE=<path-to-alpaka>
 ```
 To compile and run with the CPU as the device
 ```bash
@@ -54,13 +54,13 @@ Outputs from profiling tools (VTune and NSight Systems) are stored in `cpp/vtune
 ## Porting to CUDA
 
 For a baseline CUDA implementation, we use the default CUDA stream and makes explicit memory copies from the host to the device and vice versa. The source code can be
-found in [./cuda/baseline.cu](./cuda/baseline.cu). The application is profiled using NVIDIA NSight Systems to collect timing information for kernels and document API calls. Statistics from the analysis are shown below. 
+found in [`./cuda/baseline.cu`](./cuda/baseline.cu). The application is profiled using NVIDIA NSight Systems to collect timing information for kernels and document API calls. Statistics from the analysis are shown below. 
 
 ![](img/cuda-baseline.png)
 
 As expected, 95% of the API call time is dedicated to memory management, indicating that our application is memory-bound. This suggests that efforts towards optimization should be focused on making better use of memory. Among the kernels, the matrix multiplication operation is more computationally intensive, taking almost three-quarters of the execution time. The stencil operation appears to be efficient, taking only a quarter of the execution time despite being called twice. 
 
-Next, we implement a version of the application that uses CUDA managed memory which defines a common logical address space which can be accessed by both the host and device. The source code can be found in [./cuda/managed.cu](./cuda/managed.cu). Profiling results are shown below.
+Next, we implement a version of the application that uses CUDA managed memory which defines a common logical address space which can be accessed by both the host and device. The source code can be found in [`./cuda/managed.cu`](./cuda/managed.cu). Profiling results are shown below.
 
 ![](img/cuda-managed.png)
 
@@ -68,10 +68,12 @@ Although once again a huge chunk of the API calls are devoted towards allocating
 
 ## Optimizing performance in CUDA
 
-Now, we optimize the performance of the code by making use of non-default CUDA streams and shared memory. Specifically, two concurrent streams are defined to move two independent matrices from the host to the device, and shared memory is used to the make the stencil operation more efficient. The source code can be found in [./cuda/shared_streamed.cu](./cuda/shared_streamed.cu). Profiling results are shown below.
+Now, we optimize the performance of the code by making use of non-default CUDA streams and shared memory. Specifically, two concurrent streams are defined to move two independent matrices from the host to the device, and shared memory is used to the make the stencil operation more efficient. The source code can be found in [`./cuda/shared_streamed.cu`](./cuda/shared_streamed.cu). Profiling results are shown below.
 
 ![](img/cuda-shared-streamed.png)
 
 By making use of programmer-managed shared memory, we relieve some of the strain on the CUDA API; this is reflected by a further drop in the time spent in making memory management API calls. The overall wall time of the application decreases marginally as well, so we do observe a slight performance gain. 
 
 ## Making use of Alpaka
+
+The Alpaka version of the code is found in [`./alpaka/main.cpp`](./alpaka/main.cpp). Arrays were rewritten as buffers, grid and block dimensions converted to Alpaka work divisions, a 2D strided loop was used to implement parallelization in the kernels. Alpaka queues organize kernel calls, memory operations, and host readouts.  
