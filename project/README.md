@@ -51,10 +51,18 @@ main.cc \
 Outputs from profiling tools (VTune and NSight Systems) are stored in `cpp/vtune` and `cuda/nsys`. 
 
 ## C++ and CPU Profiling
+
+The source code can be found in [`./cpu/stencil.cpp`](./cpu/stencil.cpp). Unfortunately, none of the computational nodes have an Intel CPU, which did not allow us to profile the application using VTune. As a substitute, we profiled the application using the `perf` tool on Unix operating systems. The results are shown below. 
+
+![](img/cpu.png)
+
+The program stalls for about 0.2 CPU cycles every instruction, indicating that this time is spent either fetching or writing data into memory. This is also reflected by the large number of L1 cache misses, which mostly occur at the beginning of the execution sequence.
+
+
+
 ## Porting to CUDA
 
-For a baseline CUDA implementation, we use the default CUDA stream and makes explicit memory copies from the host to the device and vice versa. The source code can be
-found in [`./cuda/baseline.cu`](./cuda/baseline.cu). The application is profiled using NVIDIA NSight Systems to collect timing information for kernels and document API calls. Statistics from the analysis are shown below. 
+For a baseline CUDA implementation, we use the default CUDA stream and makes explicit memory copies from the host to the device and vice versa. The source code can be found in [`./cuda/baseline.cu`](./cuda/baseline.cu). The application is profiled using NVIDIA NSight Systems to collect timing information for kernels and document API calls. Statistics from the analysis are shown below. 
 
 ![](img/cuda-baseline.png)
 
